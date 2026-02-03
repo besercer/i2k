@@ -1,4 +1,4 @@
-import { prisma, Scan, ScanStatus, GameCondition, GameLanguage } from '@i2k/database';
+import { prisma, Prisma, Scan, ScanStatus, GameCondition, GameLanguage } from '@i2k/database';
 import {
   createAiClient,
   type AiClient,
@@ -337,9 +337,6 @@ export class ScanService {
 
     // Get or calculate pricing info
     let suggestedPrice = input.price;
-    const _existingDraft = await prisma.listingDraft.findUnique({
-      where: { scanId }
-    });
 
     // Create or update listing draft
     await prisma.listingDraft.upsert({
@@ -353,7 +350,7 @@ export class ScanService {
         rangeHigh: suggestedPrice * 1.3,
         reasoningBullets: [],
         priceConfidence: 70,
-        titleVariants: listingResult.titleVariants,
+        titleVariants: listingResult.titleVariants as unknown as Prisma.InputJsonValue,
         description: listingResult.description,
         bulletPoints: listingResult.bulletPoints,
         searchTags: listingResult.searchTags,
@@ -363,7 +360,7 @@ export class ScanService {
       },
       update: {
         suggestedPrice,
-        titleVariants: listingResult.titleVariants,
+        titleVariants: listingResult.titleVariants as unknown as Prisma.InputJsonValue,
         description: listingResult.description,
         bulletPoints: listingResult.bulletPoints,
         searchTags: listingResult.searchTags,
