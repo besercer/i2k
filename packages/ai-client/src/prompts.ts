@@ -86,19 +86,22 @@ Erstelle:
 };
 
 // JSON Schemas for structured outputs
+// OpenAI Structured Outputs requires additionalProperties: false on all objects
 export const JSON_SCHEMAS = {
   recognition: {
     type: 'object',
     required: ['best', 'alternatives', 'evidence', 'needsConfirmation'],
+    additionalProperties: false,
     properties: {
       best: {
         type: 'object',
         required: ['title', 'confidence'],
+        additionalProperties: false,
         properties: {
           title: { type: 'string' },
-          edition: { type: 'string' },
-          languageGuess: { type: 'string', enum: ['DE', 'EN', 'FR', 'ES', 'IT', 'NL', 'OTHER'] },
-          confidence: { type: 'integer', minimum: 0, maximum: 100 }
+          edition: { type: ['string', 'null'] },
+          languageGuess: { type: ['string', 'null'], enum: ['DE', 'EN', 'FR', 'ES', 'IT', 'NL', 'OTHER', null] },
+          confidence: { type: 'integer' }
         }
       },
       alternatives: {
@@ -106,16 +109,18 @@ export const JSON_SCHEMAS = {
         items: {
           type: 'object',
           required: ['title', 'confidence'],
+          additionalProperties: false,
           properties: {
             title: { type: 'string' },
-            edition: { type: 'string' },
-            confidence: { type: 'integer', minimum: 0, maximum: 100 }
+            edition: { type: ['string', 'null'] },
+            confidence: { type: 'integer' }
           }
         }
       },
       evidence: {
         type: 'object',
         required: ['visibleText', 'visualCues'],
+        additionalProperties: false,
         properties: {
           visibleText: { type: 'array', items: { type: 'string' } },
           visualCues: { type: 'array', items: { type: 'string' } }
@@ -128,16 +133,18 @@ export const JSON_SCHEMAS = {
   normalization: {
     type: 'object',
     required: ['normalizedTitle', 'keywords'],
+    additionalProperties: false,
     properties: {
       normalizedTitle: { type: 'string' },
       keywords: { type: 'array', items: { type: 'string' } },
-      editionHints: { type: 'string' }
+      editionHints: { type: ['string', 'null'] }
     }
   },
 
   pricing: {
     type: 'object',
     required: ['recommendedPrice', 'quickSalePrice', 'negotiationAnchor', 'rangeLow', 'rangeHigh', 'reasoningBullets', 'confidence'],
+    additionalProperties: false,
     properties: {
       recommendedPrice: { type: 'number' },
       quickSalePrice: { type: 'number' },
@@ -145,30 +152,30 @@ export const JSON_SCHEMAS = {
       rangeLow: { type: 'number' },
       rangeHigh: { type: 'number' },
       reasoningBullets: { type: 'array', items: { type: 'string' } },
-      confidence: { type: 'integer', minimum: 0, maximum: 100 }
+      confidence: { type: 'integer' }
     }
   },
 
   listing: {
     type: 'object',
     required: ['titleVariants', 'description', 'bulletPoints', 'searchTags'],
+    additionalProperties: false,
     properties: {
       titleVariants: {
         type: 'array',
         items: {
           type: 'object',
           required: ['title', 'style'],
+          additionalProperties: false,
           properties: {
-            title: { type: 'string', maxLength: 65 },
+            title: { type: 'string' },
             style: { type: 'string', enum: ['NEUTRAL', 'URGENT', 'FRIENDLY'] }
           }
-        },
-        minItems: 3,
-        maxItems: 3
+        }
       },
-      description: { type: 'string', maxLength: 1500 },
-      bulletPoints: { type: 'array', items: { type: 'string' }, minItems: 5, maxItems: 5 },
-      searchTags: { type: 'array', items: { type: 'string' }, minItems: 5, maxItems: 5 }
+      description: { type: 'string' },
+      bulletPoints: { type: 'array', items: { type: 'string' } },
+      searchTags: { type: 'array', items: { type: 'string' } }
     }
   }
 };
