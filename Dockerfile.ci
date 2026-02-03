@@ -1,0 +1,20 @@
+FROM node:20-alpine
+
+RUN corepack enable && corepack prepare pnpm@9.1.0 --activate
+
+WORKDIR /app
+
+# Copy all files
+COPY . .
+
+# Install all dependencies
+RUN pnpm install --frozen-lockfile
+
+# Generate Prisma client
+RUN pnpm --filter @i2k/database generate
+
+# Build all packages
+RUN pnpm build
+
+# Default command
+CMD ["pnpm", "test:coverage"]

@@ -1,0 +1,142 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ScanStatus {
+  UPLOADED
+  ANALYZING
+  ANALYZED
+  PRICING
+  PRICED
+  DRAFTING
+  DRAFTED
+  ERROR
+}
+
+enum GameCondition {
+  NEW
+  LIKE_NEW
+  VERY_GOOD
+  GOOD
+  ACCEPTABLE
+}
+
+enum GameLanguage {
+  DE
+  EN
+  FR
+  ES
+  IT
+  NL
+  OTHER
+}
+
+enum PriceSource {
+  MANUAL
+  KLEINANZEIGEN
+  BGG
+  OTHER
+}
+
+model Scan {
+  id                String        @id @default(uuid())
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // Image storage
+  imageKey          String        // S3/local storage key
+  imageMimeType     String
+  imageSize         Int           // bytes
+
+  // Status tracking
+  status            ScanStatus    @default(UPLOADED)
+  errorMessage      String?
+
+  // AI Recognition Results (stored as JSON)
+  aiCandidates      Json?         // Array of AiCandidate
+  aiEvidence        Json?         // AiEvidence object
+
+  // User Confirmation
+  confirmedTitle    String?
+  confirmedEdition  String?
+  confirmedLanguage GameLanguage?
+  confirmedCondition GameCondition?
+  isComplete        Boolean?
+  normalizedTitle   String?
+  keywords          String[]      @default([])
+
+  // Relations
+  priceSamples      PriceSample[]
+  listingDraft      ListingDraft?
+
+  // Session tracking (optional, for anonymous users)
+  sessionId         String?
+
+  @@index([sessionId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model PriceSample {
+  id            String      @id @default(uuid())
+  createdAt     DateTime    @default(now())
+
+  scanId        String
+  scan          Scan        @relation(fields: [scanId], references: [id], onDelete: Cascade)
+
+  source        PriceSource
+  price         Float
+  currency      String      @default("EUR")
+  conditionHint String?
+  url           String?
+  urlHash       String?     // For deduplication
+
+  @@index([scanId])
+  @@index([source])
+}
+
+model ListingDraft {
+  id              String    @id @default(uuid())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  scanId          String    @unique
+  scan            Scan      @relation(fields: [scanId], references: [id], onDelete: Cascade)
+
+  // Pricing
+  suggestedPrice    Float
+  quickSalePrice    Float
+  negotiationAnchor Float
+  rangeLow          Float
+  rangeHigh         Float
+  reasoningBullets  String[]
+  priceConfidence   Int       // 0-100
+
+  // Generated Content
+  titleVariants     Json      // Array of TitleVariant
+  description       String
+  bulletPoints      String[]
+  searchTags        String[]
+
+  // User Inputs
+  pickupLocation    String?
+  shippingAvailable Boolean   @default(false)
+  paypalAvailable   Boolean   @default(false)
+
+  @@index([scanId])
+}
+
+model RateLimit {
+  id          String    @id @default(uuid())
+  key         String    @unique // IP or session ID
+  count       Int       @default(0)
+  windowStart DateTime  @default(now())
+
+  @@index([key])
+  @@index([windowStart])
+}

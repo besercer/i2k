@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.ci
+    environment:
+      - NODE_ENV=test
+      - DATABASE_URL=postgresql://app:app@db:5432/app_test
+      - REDIS_URL=redis://redis:6379
+      - OPENAI_API_KEY=test-key
+      - AI_PROVIDER=mock
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - ./coverage:/app/coverage
+    command: pnpm test:coverage
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=app
+      - POSTGRES_PASSWORD=app
+      - POSTGRES_DB=app_test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d app_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
