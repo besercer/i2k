@@ -95,7 +95,7 @@ export const JSON_SCHEMAS = {
     properties: {
       best: {
         type: 'object',
-        required: ['title', 'confidence'],
+        required: ['title', 'edition', 'languageGuess', 'confidence'],
         additionalProperties: false,
         properties: {
           title: { type: 'string' },
@@ -108,7 +108,7 @@ export const JSON_SCHEMAS = {
         type: 'array',
         items: {
           type: 'object',
-          required: ['title', 'confidence'],
+          required: ['title', 'edition', 'confidence'],
           additionalProperties: false,
           properties: {
             title: { type: 'string' },
@@ -132,7 +132,7 @@ export const JSON_SCHEMAS = {
 
   normalization: {
     type: 'object',
-    required: ['normalizedTitle', 'keywords'],
+    required: ['normalizedTitle', 'keywords', 'editionHints'],
     additionalProperties: false,
     properties: {
       normalizedTitle: { type: 'string' },
