@@ -16,7 +16,7 @@ COPY packages/ai-client/package.json ./packages/ai-client/
 COPY apps/api/package.json ./apps/api/
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
 # Copy source files
 COPY packages/shared ./packages/shared
@@ -46,7 +46,7 @@ COPY --from=builder /app/packages/database/package.json ./packages/database/
 COPY --from=builder /app/packages/ai-client/package.json ./packages/ai-client/
 COPY --from=builder /app/apps/api/package.json ./apps/api/
 
-RUN pnpm install --prod --frozen-lockfile
+RUN pnpm install --prod
 
 # Copy built files
 COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
