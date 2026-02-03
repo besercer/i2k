@@ -36,6 +36,9 @@ RUN pnpm --filter @i2k/api build
 # Production stage
 FROM node:20-alpine AS runner
 
+# Install OpenSSL for Prisma
+RUN apk add --no-cache openssl libc6-compat
+
 RUN corepack enable && corepack prepare pnpm@9.1.0 --activate
 
 WORKDIR /app
