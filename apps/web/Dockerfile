@@ -23,7 +23,9 @@ COPY apps/web ./apps/web
 # Build shared package
 RUN pnpm --filter @i2k/shared build
 
-# Build web app
+# Build web app - NEXT_PUBLIC_* must be set at build time
+ARG NEXT_PUBLIC_API_BASE_URL
+ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm --filter @i2k/web build
 
