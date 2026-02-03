@@ -1,0 +1,118 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: ./apps/web/Dockerfile
+    image: i2k-web:latest
+    environment:
+      - NEXT_PUBLIC_API_BASE_URL=https://i2k.schaper-style.de
+    depends_on:
+      - api
+    ports:
+      - "127.0.0.1:3002:3000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: local
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - i2k-network
+
+  api:
+    build:
+      context: ..
+      dockerfile: ./apps/api/Dockerfile
+    image: i2k-api:latest
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOST=0.0.0.0
+      - DATABASE_URL=postgresql://i2k:${POSTGRES_PASSWORD}@db:5432/i2k
+      - REDIS_URL=redis://redis:6379
+      - CORS_ORIGIN=https://i2k.schaper-style.de
+      - RATE_LIMIT_MAX=100
+      - RATE_LIMIT_WINDOW_MS=60000
+      - MAX_FILE_SIZE_MB=12
+      - UPLOAD_DIR=/app/uploads
+      - ENABLE_SWAGGER=false
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "127.0.0.1:3003:3000"
+    volumes:
+      - uploads:/app/uploads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: local
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - i2k-network
+
+  db:
+    image: postgres:16-alpine
+    container_name: i2k-db
+    environment:
+      - POSTGRES_USER=i2k
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=i2k
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U i2k -d i2k"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    logging:
+      driver: local
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - i2k-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: i2k-redis
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    logging:
+      driver: local
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - i2k-network
+
+volumes:
+  postgres_data:
+    name: i2k_postgres_data
+  redis_data:
+    name: i2k_redis_data
+  uploads:
+    name: i2k_uploads
+
+networks:
+  i2k-network:
+    driver: bridge
