@@ -8,7 +8,6 @@ import {
 } from '@i2k/ai-client';
 import {
   type AiCandidate,
-  type AiEvidence,
   type PriceSample
 } from '@i2k/shared';
 import { fileService } from './file.service';
@@ -338,7 +337,7 @@ export class ScanService {
 
     // Get or calculate pricing info
     let suggestedPrice = input.price;
-    const existingDraft = await prisma.listingDraft.findUnique({
+    const _existingDraft = await prisma.listingDraft.findUnique({
       where: { scanId }
     });
 

@@ -24,8 +24,9 @@ COPY packages/database ./packages/database
 COPY packages/ai-client ./packages/ai-client
 COPY apps/api ./apps/api
 
-# Generate Prisma client
+# Generate Prisma client and build database package
 RUN pnpm --filter @i2k/database generate
+RUN pnpm --filter @i2k/database build
 
 # Build packages
 RUN pnpm --filter @i2k/shared build
